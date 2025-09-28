@@ -1,32 +1,37 @@
 extends CharacterBody2D
 
-# --- Movement Properties ---
-@export var speed: float = 300.0
-@export var jump_velocity: float = 400.0
+const SPEED = 350.0
+const JUMP_VELOCITY = -700.0 
 
-# Get the gravity from the project settings to be applied every frame.
-var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
-# --- Built-in Godot Function (runs every frame) ---
-func _physics_process(delta: float) -> void:
-	# 1. Apply Gravity
+@onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
+
+func _physics_process(delta):
 	if not is_on_floor():
-		velocity.y += gravity * delta
-
-	# 2. Handle Jump
-	# Check if the "jump" action is pressed AND the character is on the floor.
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
-		velocity.y = -jump_velocity # Negative Y is up in 2D
-
-	# 3. Get Input Direction
-	var direction: float = Input.get_axis("ui_left", "ui_right")
-
-	# 4. Handle Horizontal Movement
-	if direction:
-		velocity.x = direction * speed
+		velocity.y += gravity * delta 
+	
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+		
+	var direction = Input.get_axis("move_left", "move_right")
+	
+	if direction > 0:
+		animated_sprite_2d.flip_h = false
+	elif direction < 0:
+		animated_sprite_2d.flip_h = true
+	if velocity.x != 0:
+		$AnimatedSprite2D.animation = "walk"
+		$AnimatedSprite2D.play()
 	else:
-		# Smoothly slow down the character when no input is given
-		velocity.x = move_toward(velocity.x, 0, speed)
+		$AnimatedSprite2D.animation = "idle"
+		$AnimatedSprite2D.play()
 
-	# 5. Move the Character
+	# Play animatations 
+	
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+		
 	move_and_slide()
